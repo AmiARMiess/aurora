@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Aurora — Immersive 3D for the modern web</title>
+  <meta name="description" content="Aurora is a tiny toolkit for building fluid, GPU-accelerated 3D experiences straight in the browser. No build step required." />
+  <meta name="theme-color" content="#05060f" />
+  <meta property="og:title" content="Aurora — Immersive 3D for the modern web" />
+  <meta property="og:description" content="Fluid, GPU-accelerated 3D experiences in the browser." />
+  <meta property="og:type" content="website" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236d8cff'/%3E%3Cstop offset='1' stop-color='%23c471ed'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M16 2 30 27H2z'/%3E%3C/svg%3E" />
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script>
+    /* Runs inline and dependency-free, so the page degrades safely even when the
+       ES module below cannot execute (opened over file://, blocked CDN, no JS).
+       Swaps the no-js flag the stylesheet keys off, and arms a failsafe timer so
+       a failed module load can never strand the visitor behind the preloader. */
+    (function () {
+      var root = document.documentElement;
+      root.classList.remove('no-js');
+      root.classList.add('js');
+
+      window.__auroraFailsafe = setTimeout(function () {
+        document.body.classList.remove('is-loading');
+        document.body.classList.add('scene-ready');
+        var p = document.getElementById('preloader');
+        if (p) p.classList.add('is-done');
+
+        /* No module means no IntersectionObserver, so every [data-reveal] would
+           stay at opacity 0. Show the whole document and settle the counters. */
+        var nodes = document.querySelectorAll('[data-reveal]');
+        for (var i = 0; i < nodes.length; i++) nodes[i].classList.add('is-visible');
+
+        var counts = document.querySelectorAll('[data-count]');
+        for (var j = 0; j < counts.length; j++) {
+          var el = counts[j];
+          el.textContent =
+            Number(el.getAttribute('data-count')).toLocaleString() +
+            (el.getAttribute('data-suffix') || '');
+        }
+
+        var year = document.getElementById('year');
+        if (year) year.textContent = String(new Date().getFullYear());
+      }, 4000);
+    })();
+  </script>
+</head>
+
+<body class="is-loading">
+  <!-- ===== Decorative layers ===== -->
+  <div class="bg-fallback" aria-hidden="true"></div>
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- ===== Preloader ===== -->
+  <div class="preloader" id="preloader" role="status" aria-live="polite">
+    <div class="preloader__inner">
+      <div class="preloader__mark" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+      <p class="preloader__label">Compiling shaders</p>
+      <div class="preloader__bar"><i id="loader-bar"></i></div>
+      <p class="preloader__pct"><span id="loader-pct">0</span>%</p>
+    </div>
+  </div>
+
+  <a class="skip-link" href="#hero">Skip to content</a>
+
+  <!-- ===== Header ===== -->
+  <header class="nav" id="nav">
+    <div class="nav__inner">
+      <a class="brand" href="#hero" aria-label="Aurora home">
+        <span class="brand__glyph" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="26" height="26" role="img"><defs><linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d8cff"/><stop offset="1" stop-color="#c471ed"/></linearGradient></defs><path fill="url(#bg1)" d="M16 2 30 27H2z"/></svg>
+        </span>
+        <span class="brand__name">Aurora</span>
+      </a>
+
+      <nav class="nav__menu" id="nav-menu" aria-label="Main">
+        <a href="#features">Features</a>
+        <a href="#process">Workflow</a>
+        <a href="#stats">Benchmarks</a>
+        <a href="#contact">Contact</a>
+      </nav>
+
+      <div class="nav__actions">
+        <a class="btn btn--ghost btn--sm" href="#process">Docs</a>
+        <a class="btn btn--primary btn--sm" href="#contact">Get started</a>
+        <button class="nav__toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
+          <span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+<main>
+    <!-- ===== Hero ===== -->
+    <section class="hero" id="hero">
+      <div class="shell hero__inner">
+        <p class="eyebrow" data-reveal>
+          <span class="eyebrow__dot" aria-hidden="true"></span>
+          v2.0 · WebGPU-ready renderer
+        </p>
+
+        <h1 class="hero__title" data-reveal data-reveal-delay="80">
+          Build worlds<br />
+          <span class="grad">in the browser</span>
+        </h1>
+
+        <p class="hero__lede" data-reveal data-reveal-delay="160">
+          Aurora turns plain JavaScript into cinematic, real-time 3D. Hand-tuned shaders,
+          a scene graph that stays out of your way, and a 14&nbsp;kB core that ships over the wire.
+        </p>
+
+        <div class="hero__cta" data-reveal data-reveal-delay="240">
+          <a class="btn btn--primary btn--lg" href="#features">
+            Explore the toolkit
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 12h13M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="btn btn--glass btn--lg" href="#process">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
+            Watch the demo
+          </a>
+        </div>
+
+        <dl class="hero__meta" data-reveal data-reveal-delay="320">
+          <div><dt>Load time</dt><dd>14 kB gzip</dd></div>
+          <div><dt>Frame budget</dt><dd>16.6 ms</dd></div>
+          <div><dt>Dependencies</dt><dd>Zero</dd></div>
+        </dl>
+      </div>
+
+      <a class="scroll-cue" href="#features" aria-label="Scroll to features">
+        <span></span>
+      </a>
+    </section>
+
+    <!-- ===== Features ===== -->
+    <section class="section" id="features">
+      <div class="shell">
+        <header class="section__head" data-reveal>
+          <p class="kicker">Capabilities</p>
+          <h2 class="section__title">Everything you need to ship <span class="grad">real-time 3D</span></h2>
+          <p class="section__lede">A complete, opinionated pipeline — from the first triangle to the final frame.</p>
+        </header>
+
+        <div class="cards">
+          <article class="card" data-tilt data-reveal>
+            <div class="card__icon card__icon--a" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2.6 21 7.8v8.4L12 21.4 3 16.2V7.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 7.8l9 5.2 9-5.2M12 13v8.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            </div>
+            <h3>Scene graph</h3>
+            <p>Parent, transform and compose thousands of nodes with an API that stays out of your way.</p>
+            <span class="card__tag">core</span>
+          </article>
+
+          <article class="card" data-tilt data-reveal data-reveal-delay="70">
+            <div class="card__icon card__icon--b" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 3.5c4.4 4.8 4.4 12.2 0 17M12 3.5c-4.4 4.8-4.4 12.2 0 17" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            </div>
+            <h3>Material library</h3>
+            <p>PBR metals, glass and toon ramps — all packed as tiny, tree-shakeable modules.</p>
+            <span class="card__tag">render</span>
+          </article>
+
+          <article class="card" data-tilt data-reveal data-reveal-delay="140">
+            <div class="card__icon card__icon--c" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path d="M13 2 4 13.5h6L9.5 22 20 10.5h-6.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            </div>
+            <h3>Shader pipeline</h3>
+            <p>Write GLSL or WGSL and hot-swap it live. Compile times measured in milliseconds.</p>
+            <span class="card__tag">gpu</span>
+          </article>
+
+<article class="card" data-tilt data-reveal>
+            <div class="card__icon card__icon--d" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><rect x="3" y="4" width="18" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 20.5h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 13l3.2-3.4L13 13l2.2-2.2L18 13.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </div>
+            <h3>Built-in post FX</h3>
+            <p>Bloom, chromatic aberration and tone mapping in one resize-aware pass.</p>
+            <span class="card__tag">effects</span>
+          </article>
+
+          <article class="card" data-tilt data-reveal data-reveal-delay="70">
+            <div class="card__icon card__icon--e" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            </div>
+            <h3>Asset pipeline</h3>
+            <p>GlTF, KTX2 and Draco compressed automatically at import time.</p>
+            <span class="card__tag">assets</span>
+          </article>
+
+          <article class="card" data-tilt data-reveal data-reveal-delay="140">
+            <div class="card__icon card__icon--f" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 21s-7.5-4.6-7.5-9.6A4.4 4.4 0 0 1 12 8.6a4.4 4.4 0 0 1 7.5 2.8C19.5 16.4 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            </div>
+            <h3>Accessible by default</h3>
+            <p>Reduced-motion fallbacks, keyboard navigation and honest contrast ratios.</p>
+            <span class="card__tag">a11y</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Process ===== -->
+    <section class="section section--split" id="process">
+      <div class="shell split">
+        <div class="split__copy">
+          <p class="kicker" data-reveal>Workflow</p>
+          <h2 class="section__title" data-reveal>Three steps. <span class="grad">Zero boilerplate.</span></h2>
+          <ol class="steps">
+            <li data-reveal>
+              <span class="steps__num">01</span>
+              <div>
+                <h3>Install the core</h3>
+                <p>One dependency, no bundler gymnastics. It also runs straight from a CDN if you prefer.</p>
+              </div>
+            </li>
+            <li data-reveal data-reveal-delay="80">
+              <span class="steps__num">02</span>
+              <div>
+                <h3>Describe your scene</h3>
+                <p>Declare objects, materials and lights with plain objects — the graph builds itself.</p>
+              </div>
+            </li>
+            <li data-reveal data-reveal-delay="160">
+              <span class="steps__num">03</span>
+              <div>
+                <h3>Ship at 60&nbsp;fps</h3>
+                <p>Aurora frustum-culls, pools and batches for you, then hands back the bytes you saved.</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+
+<div class="split__panel" data-reveal data-reveal-delay="120">
+          <div class="panel" data-tilt>
+            <div class="panel__bar" aria-hidden="true">
+              <i></i><i></i><i></i>
+              <span>aurora.config.js</span>
+            </div>
+            <pre class="panel__code"><code><span class="c-k">import</span> { <span class="c-f">Scene</span> } <span class="c-k">from</span> <span class="c-s">'aurora'</span>;
+
+<span class="c-k">const</span> scene = <span class="c-k">new</span> <span class="c-f">Scene</span>();
+scene.<span class="c-m">add</span>({
+  geometry: <span class="c-s">'sphere'</span>,
+  material: <span class="c-s">'iridescent'</span>,
+  motion:   <span class="c-s">'orbit'</span>
+});
+
+scene.<span class="c-f">render</span>({ fps: <span class="c-n">60</span> });</code></pre>
+            <div class="panel__glow" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Stats ===== -->
+    <section class="section section--stats" id="stats">
+      <div class="shell">
+        <header class="section__head" data-reveal>
+          <p class="kicker">Benchmarks</p>
+          <h2 class="section__title">Measured, not marketed</h2>
+        </header>
+
+        <div class="stats">
+          <div class="stat" data-reveal>
+            <p class="stat__value"><span data-count="14" data-suffix=" kB">0</span></p>
+            <p class="stat__label">Core bundle, gzipped</p>
+          </div>
+          <div class="stat" data-reveal data-reveal-delay="80">
+            <p class="stat__value"><span data-count="60">0</span><span class="stat__unit"> fps</span></p>
+            <p class="stat__label">Sustained on mid-tier mobile</p>
+          </div>
+          <div class="stat" data-reveal data-reveal-delay="160">
+            <p class="stat__value"><span data-count="1200">0</span><span class="stat__unit">+</span></p>
+            <p class="stat__label">Scenes rendered every hour</p>
+          </div>
+          <div class="stat" data-reveal data-reveal-delay="240">
+            <p class="stat__value"><span data-count="0">0</span></p>
+            <p class="stat__label">Runtime dependencies</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CTA ===== -->
+    <section class="section cta" id="contact">
+      <div class="shell">
+        <div class="cta__card" data-reveal>
+          <p class="kicker">Get started</p>
+          <h2 class="cta__title">Ready to drop 3D<br />into your next build?</h2>
+          <p class="cta__lede">Grab the starter template or read the docs — either way you'll have pixels on screen in under five minutes.</p>
+          <div class="cta__actions">
+            <a class="btn btn--primary btn--lg" href="#hero">Start building free</a>
+            <a class="btn btn--glass btn--lg" href="#features">Talk to us</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell footer__inner">
+      <a class="brand" href="#hero">
+        <span class="brand__glyph" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="22" height="22" role="img"><defs><linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d8cff"/><stop offset="1" stop-color="#c471ed"/></linearGradient></defs><path fill="url(#bg2)" d="M16 2 30 27H2z"/></svg>
+        </span>
+        <span class="brand__name">Aurora</span>
+      </a>
+      <p class="footer__note">Crafted with three.js · <span id="year"></span></p>
+      <nav class="footer__links" aria-label="Footer">
+        <a href="#features">Features</a>
+        <a href="#process">Workflow</a>
+        <a href="#stats">Benchmarks</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
